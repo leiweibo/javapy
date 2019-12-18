@@ -57,7 +57,20 @@ cli.add_command(javac)
 cli.add_command(java)
 cli.add_command(javap)
 
+def readClass():
+    file = 'javas/Main.class'
+    with open(file, 'rb') as f:
+        data = f.read(4)
+        array = []
+        for d in data:
+            array.append(format(d, 'X'))
+        magic = ''.join(array)
+        magic = ''.join(['0X', magic])
+        print(magic)
+    print(b'\xe4\xb8\xad\xe6\x96\x87'.decode('utf-8'))
+
 if __name__ == '__main__':
+    readClass()
     '''
     main函数，通过click添加startCrawl和startApi两个启动命令
     '''
