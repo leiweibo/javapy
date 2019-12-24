@@ -57,6 +57,8 @@ cli.add_command(javac)
 cli.add_command(java)
 cli.add_command(javap)
 
+from method_ref_info import MethodRefInfo
+from utils import Utils
 def readClass():
     file = 'javas/Main.class'
     with open(file, 'rb') as f:
@@ -73,9 +75,17 @@ def readClass():
         parseData(data, 'constant pool count(final result should be the shown value - 1)', 'd')
 
         print('the constant is --------------------')
-        data = f.read(1)
-        parseData(data, 'constant tag', 'd')
-
+        tag = Utils.formatDataByte(f.read(1), 'd')
+        switchers = {
+            10: parseMethodInfo
+        }
+        method = switchers.get(tag)
+        if method:
+            method(tag, f.read(2), f.read(2))
+        # switcher(10)
+        
+def parseMethodInfo(tag, classIndexBytes, nameAndTypeIndexBytes):
+    MethodRefInfo.parseMethodInfo("1", tag, classIndexBytes, nameAndTypeIndexBytes)
 
 def parseData(datas, desc, formatter):
     '''
@@ -85,15 +95,10 @@ def parseData(datas, desc, formatter):
                x -> 16 进制，并且小写
     desc: 输出内容的描述
     '''
-    array = []
-    for d in datas:
-        array.append(format(d, formatter))
-    result = ''.join(array)
-    if formatter == 'x' or formatter == 'X':
-        result = ''.join(['0X', result])
-    elif formatter == 'd':
-        result =  int(result)
+    result = Utils.formatDataByte(datas, formatter)
     print('the {} is: {}'.format(desc, result))
+
+
 
 if __name__ == '__main__':
     readClass()
