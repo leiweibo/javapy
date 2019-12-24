@@ -61,17 +61,43 @@ def readClass():
     file = 'javas/Main.class'
     with open(file, 'rb') as f:
         data = f.read(4)
-        array = []
-        for d in data:
-            array.append(format(d, 'X'))
-        magic = ''.join(array)
-        magic = ''.join(['0X', magic])
-        print(magic)
-    print(b'\xe4\xb8\xad\xe6\x96\x87'.decode('utf-8'))
+        parseData(data, 'magic number', 'X')
+
+        data = f.read(2)
+        parseData(data, 'mini version', 'd')
+
+        data = f.read(2)
+        parseData(data, 'major version', 'd')
+
+        data = f.read(2)
+        parseData(data, 'constant pool count(final result should be the shown value - 1)', 'd')
+
+        print('the constant is --------------------')
+        data = f.read(1)
+        parseData(data, 'constant tag', 'd')
+
+
+def parseData(datas, desc, formatter):
+    '''
+    根据指定的格式解析指定的data
+    datas: 字节数组
+    formatter: X -> 16 进制，并且大写
+               x -> 16 进制，并且小写
+    desc: 输出内容的描述
+    '''
+    array = []
+    for d in datas:
+        array.append(format(d, formatter))
+    result = ''.join(array)
+    if formatter == 'x' or formatter == 'X':
+        result = ''.join(['0X', result])
+    elif formatter == 'd':
+        result =  int(result)
+    print('the {} is: {}'.format(desc, result))
 
 if __name__ == '__main__':
     readClass()
     '''
     main函数，通过click添加startCrawl和startApi两个启动命令
     '''
-    cli(obj={})
+    # cli(obj={})
