@@ -2,10 +2,12 @@ import os
 import click
 import subprocess
 
+
 def append(file, appendix):
     if file and not file.endswith(appendix):
-        return file+appendix
+        return file + appendix
     return file
+
 
 @click.group()
 @click.option('--file')
@@ -31,6 +33,7 @@ def javac(ctx):
     if not res or (len(res.read()) == 0):
         click.echo('执行javac成功')
 
+
 @click.command()
 def java():
     click.echo('execute java')
@@ -46,21 +49,25 @@ def javap(ctx):
     file = ctx.obj['file']
     file = append(file, ".class")
     subprocess.Popen('cd', shell=True, stdout=subprocess.PIPE, cwd='javas')
-    out_bytes = subprocess.check_output(['javap', '-v', 'javas/'+file])
+    out_bytes = subprocess.check_output(['javap', '-v', 'javas/' + file])
     out_text = out_bytes.decode('utf-8')
     click.echo(out_text)
     # out_bytes = subprocess.check_output(['cd','javas'])
     # out_text = out_bytes.decode('utf-8')
     # click.echo(out_text)
 
+
 cli.add_command(javac)
 cli.add_command(java)
 cli.add_command(javap)
 
-from method_ref_info import MethodRefInfo
+from ref_info import CommonRefInfo, StringInfo
 from utils import Utils
+
+
 def readClass():
     file = 'javas/Main.class'
+    switchers = {10: parseMethodInfo, 9: parseFieldInfo, 8: parseStringInfo}
     with open(file, 'rb') as f:
         data = f.read(4)
         parseData(data, 'magic number', 'X')
@@ -72,20 +79,61 @@ def readClass():
         parseData(data, 'major version', 'd')
 
         data = f.read(2)
-        parseData(data, 'constant pool count(final result should be the shown value - 1)', 'd')
+        parseData(
+            data,
+            'constant pool count(final result should be the shown value - 1)',
+            'd')
 
         print('the constant is --------------------')
         tag = Utils.formatDataByte(f.read(1), 'd')
-        switchers = {
-            10: parseMethodInfo
-        }
-        method = switchers.get(tag)
-        if method:
-            method(tag, f.read(2), f.read(2))
-        # switcher(10)
-        
-def parseMethodInfo(tag, classIndexBytes, nameAndTypeIndexBytes):
-    MethodRefInfo.parseMethodInfo("1", tag, classIndexBytes, nameAndTypeIndexBytes)
+        executeMethod("1", tag, switchers, f.read(2), f.read(2))
+        tag = Utils.formatDataByte(f.read(1), 'd')
+        executeMethod("2", tag, switchers, f.read(2), f.read(2))
+        tag = Utils.formatDataByte(f.read(1), 'd')
+        executeMethod("3", tag, switchers, f.read(2), None)
+        tag = Utils.formatDataByte(f.read(1), 'd')
+        executeMethod("4", tag, switchers, f.read(2), f.read(2))
+
+
+def parseMethodInfo(order, tag, classIndexBytes, nameAndTypeIndexBytes):
+    '''
+    方法信息
+    '''
+    parseInfo("MethodRef", order, tag, classIndexBytes, nameAndTypeIndexBytes)
+
+
+def parseFieldInfo(order, tag, classIndexBytes, nameAndTypeIndexBytes):
+    '''
+    变量信息
+    '''
+    parseInfo("FieldRef", order, tag, classIndexBytes, nameAndTypeIndexBytes)
+
+
+def parseStringInfo(order, tag, classIndexBytes):
+    '''
+    字符串信息
+    '''
+    StringInfo.parseInfo("String", order, tag, classIndexBytes)
+
+
+def parseInfo(type, order, tag, classIndexBytes, nameAndTypeIndexBytes):
+    '''
+    方法信息
+    '''
+    CommonRefInfo.parseInfo(type, order, tag, classIndexBytes,
+                            nameAndTypeIndexBytes)
+
+
+def executeMethod(order, tag, switchers, nameIndexBytes,
+                  nameAndTypeIndexBytes):
+    method = switchers.get(tag)
+
+    if method:
+        if nameAndTypeIndexBytes:
+            method(order, tag, nameIndexBytes, nameAndTypeIndexBytes)
+        else:
+            method(order, tag, nameIndexBytes)
+
 
 def parseData(datas, desc, formatter):
     '''
@@ -97,7 +145,6 @@ def parseData(datas, desc, formatter):
     '''
     result = Utils.formatDataByte(datas, formatter)
     print('the {} is: {}'.format(desc, result))
-
 
 
 if __name__ == '__main__':
