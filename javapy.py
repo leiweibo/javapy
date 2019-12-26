@@ -61,13 +61,13 @@ cli.add_command(javac)
 cli.add_command(java)
 cli.add_command(javap)
 
-from ref_info import CommonRefInfo, StringInfo
+from ref_info import CommonRefInfo, CommonRefInfo1, CommonRefInfo2, Utf8Info
 from utils import Utils
 
 
 def readClass():
     file = 'javas/Main.class'
-    switchers = {10: parseMethodInfo, 9: parseFieldInfo, 8: parseStringInfo}
+    switchers = {12: parseNameAndType, 10: parseMethodInfo, 9: parseFieldInfo, 8: parseStringInfo, 7: parseClassInfo, 1: parseUtf8Info}
     with open(file, 'rb') as f:
         data = f.read(4)
         parseData(data, 'magic number', 'X')
@@ -79,21 +79,15 @@ def readClass():
         parseData(data, 'major version', 'd')
 
         data = f.read(2)
-        parseData(
+        constantPoolCount = parseData(
             data,
             'constant pool count(final result should be the shown value - 1)',
             'd')
-
+        constantPoolCount = int(constantPoolCount)
         print('the constant is --------------------')
-        tag = Utils.formatDataByte(f.read(1), 'd')
-        executeMethod("1", tag, switchers, f.read(2), f.read(2))
-        tag = Utils.formatDataByte(f.read(1), 'd')
-        executeMethod("2", tag, switchers, f.read(2), f.read(2))
-        tag = Utils.formatDataByte(f.read(1), 'd')
-        executeMethod("3", tag, switchers, f.read(2), None)
-        tag = Utils.formatDataByte(f.read(1), 'd')
-        executeMethod("4", tag, switchers, f.read(2), f.read(2))
-
+        for i in range(1, constantPoolCount):
+            tag = Utils.formatDataByte(f.read(1), 'd')
+            executeMethod(str(i), tag, switchers, f)
 
 def parseMethodInfo(order, tag, classIndexBytes, nameAndTypeIndexBytes):
     '''
@@ -113,8 +107,13 @@ def parseStringInfo(order, tag, classIndexBytes):
     '''
     字符串信息
     '''
-    StringInfo.parseInfo("String", order, tag, classIndexBytes)
+    CommonRefInfo1.parseInfo("String", order, tag, classIndexBytes)
 
+def parseClassInfo(order, tag, classIndexBytes):
+    '''
+    Class信息
+    '''
+    CommonRefInfo1.parseInfo("Class", order, tag, classIndexBytes)
 
 def parseInfo(type, order, tag, classIndexBytes, nameAndTypeIndexBytes):
     '''
@@ -123,9 +122,35 @@ def parseInfo(type, order, tag, classIndexBytes, nameAndTypeIndexBytes):
     CommonRefInfo.parseInfo(type, order, tag, classIndexBytes,
                             nameAndTypeIndexBytes)
 
+def parseUtf8Info(order, tag, contentBytes):
+    '''
+    utf-8 信息
+    '''
+    Utf8Info.parseInfo("Utf8", order, tag, contentBytes)
 
-def executeMethod(order, tag, switchers, nameIndexBytes,
-                  nameAndTypeIndexBytes):
+def parseNameAndType(order, tag, classIndexBytes, nameAndTypeIndexBytes):
+    '''
+    解析 NameAndType信息
+    '''
+    CommonRefInfo2.parseInfo("NameAndType", order, tag, classIndexBytes,
+                            nameAndTypeIndexBytes)
+
+
+def executeMethod(order, tag, switchers, f):
+    if tag == 12 or tag == 10 or tag == 9:
+        nameIndexBytes = f.read(2)
+        nameAndTypeIndexBytes = f.read(2)
+    elif tag == 8 or tag == 7 :
+        nameIndexBytes = f.read(2)
+        nameAndTypeIndexBytes = None
+    elif tag == 1:
+        length = Utils.formatDataByte(f.read(2), 'd')
+        nameIndexBytes = f.read(length)
+        nameAndTypeIndexBytes = None
+    
+    if nameIndexBytes == None and nameAndTypeIndexBytes == None:
+        pass
+
     method = switchers.get(tag)
 
     if method:
@@ -145,6 +170,7 @@ def parseData(datas, desc, formatter):
     '''
     result = Utils.formatDataByte(datas, formatter)
     print('the {} is: {}'.format(desc, result))
+    return result
 
 
 if __name__ == '__main__':
