@@ -63,11 +63,19 @@ cli.add_command(javap)
 
 from ref_info import CommonRefInfo, CommonRefInfo1, CommonRefInfo2, Utf8Info
 from utils import Utils
+from constants import ACCESS_FLAG, ACCESS_FLAG_DESC
 
 
 def readClass():
     file = 'javas/Main.class'
-    switchers = {12: parseNameAndType, 10: parseMethodInfo, 9: parseFieldInfo, 8: parseStringInfo, 7: parseClassInfo, 1: parseUtf8Info}
+    switchers = {
+        12: parseNameAndType,
+        10: parseMethodInfo,
+        9: parseFieldInfo,
+        8: parseStringInfo,
+        7: parseClassInfo,
+        1: parseUtf8Info
+    }
     with open(file, 'rb') as f:
         data = f.read(4)
         parseData(data, 'magic number', 'X')
@@ -89,6 +97,21 @@ def readClass():
             tag = Utils.formatDataByte(f.read(1), 'd')
             executeMethod(str(i), tag, switchers, f)
 
+        print()
+        accessFlagBytes = Utils.formatDataByte(f.read(2), 'd')
+        accessFlagArray = []
+        i = 0
+        while i < len(ACCESS_FLAG):
+            if ACCESS_FLAG[i] & accessFlagBytes > 0:
+                accessFlagArray.append('ACC_' + ACCESS_FLAG_DESC[i])
+            i += 1
+        print('Access Flags:           ' + (','.join(accessFlagArray)))
+        # thisClassBytes = f.read(2)
+        # print(str(Utils.formatDataByte(thisClassBytes, 'd')))
+        # superClassBytes = f.read(2)
+        # print(str(Utils.formatDataByte(superClassBytes, 'd')))
+
+
 def parseMethodInfo(order, tag, classIndexBytes, nameAndTypeIndexBytes):
     '''
     方法信息
@@ -109,11 +132,13 @@ def parseStringInfo(order, tag, classIndexBytes):
     '''
     CommonRefInfo1.parseInfo("String", order, tag, classIndexBytes)
 
+
 def parseClassInfo(order, tag, classIndexBytes):
     '''
     Class信息
     '''
     CommonRefInfo1.parseInfo("Class", order, tag, classIndexBytes)
+
 
 def parseInfo(type, order, tag, classIndexBytes, nameAndTypeIndexBytes):
     '''
@@ -122,32 +147,34 @@ def parseInfo(type, order, tag, classIndexBytes, nameAndTypeIndexBytes):
     CommonRefInfo.parseInfo(type, order, tag, classIndexBytes,
                             nameAndTypeIndexBytes)
 
+
 def parseUtf8Info(order, tag, contentBytes):
     '''
     utf-8 信息
     '''
     Utf8Info.parseInfo("Utf8", order, tag, contentBytes)
 
+
 def parseNameAndType(order, tag, classIndexBytes, nameAndTypeIndexBytes):
     '''
     解析 NameAndType信息
     '''
     CommonRefInfo2.parseInfo("NameAndType", order, tag, classIndexBytes,
-                            nameAndTypeIndexBytes)
+                             nameAndTypeIndexBytes)
 
 
 def executeMethod(order, tag, switchers, f):
     if tag == 12 or tag == 10 or tag == 9:
         nameIndexBytes = f.read(2)
         nameAndTypeIndexBytes = f.read(2)
-    elif tag == 8 or tag == 7 :
+    elif tag == 8 or tag == 7:
         nameIndexBytes = f.read(2)
         nameAndTypeIndexBytes = None
     elif tag == 1:
         length = Utils.formatDataByte(f.read(2), 'd')
         nameIndexBytes = f.read(length)
         nameAndTypeIndexBytes = None
-    
+
     if nameIndexBytes == None and nameAndTypeIndexBytes == None:
         pass
 
