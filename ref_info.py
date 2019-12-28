@@ -39,6 +39,7 @@ class CommonRefInfo:
         methodRefInfo = CommonRefInfo(type, order, tag, classIndex,
                                       nameAndTypeIndex)
         methodRefInfo.printString()
+        return methodRefInfo
 
 
 class CommonRefInfo1:
@@ -61,6 +62,8 @@ class CommonRefInfo1:
         classIndex = Utils.formatDataByte(classIndexBytes, 'd')
         stringRefInfo = CommonRefInfo1(type, order, tag, classIndex)
         stringRefInfo.printString()
+        return stringRefInfo
+
 
 class CommonRefInfo2(CommonRefInfo):
     def printString(self):
@@ -73,8 +76,10 @@ class CommonRefInfo2(CommonRefInfo):
         classIndex = Utils.formatDataByte(classIndexBytes, 'd')
         nameAndTypeIndex = Utils.formatDataByte(nameAndTypeIndexBytes, 'd')
         methodRefInfo = CommonRefInfo2(type, order, tag, classIndex,
-                                      nameAndTypeIndex)
+                                       nameAndTypeIndex)
         methodRefInfo.printString()
+        return methodRefInfo
+
 
 class Utf8Info:
     def __init__(self, type, order, tag, contentBytes):
@@ -82,12 +87,18 @@ class Utf8Info:
         self.order = order
         self.tag = tag
         self.contentBytes = contentBytes
-    
+
+    def getContent(self):
+        content = Utils.formatDataByte(self.contentBytes, 's')
+        return content
+
     @staticmethod
     def parseInfo(type, order, tag, contentBytes):
         utf8Info = Utf8Info(type, order, tag, contentBytes)
         utf8Info.printString()
+        return utf8Info
 
     def printString(self):
         content = Utils.formatDataByte(self.contentBytes, 's')
-        print('#{} = {}              {}'.format(self.order, self.type, content))
+        print('#{} = {}              {}'.format(self.order, self.type,
+                                                content))

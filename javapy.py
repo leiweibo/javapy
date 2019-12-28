@@ -93,10 +93,11 @@ def readClass():
             'd')
         constantPoolCount = int(constantPoolCount)
         print('the constant is --------------------')
+        constantPools = []
         for i in range(1, constantPoolCount):
             tag = Utils.formatDataByte(f.read(1), 'd')
-            executeMethod(str(i), tag, switchers, f)
-
+            constantPool = executeMethod(str(i), tag, switchers, f)
+            constantPools.append(constantPool)
         print()
         accessFlagBytes = Utils.formatDataByte(f.read(2), 'd')
         accessFlagArray = []
@@ -105,62 +106,83 @@ def readClass():
             if ACCESS_FLAG[i] & accessFlagBytes > 0:
                 accessFlagArray.append('ACC_' + ACCESS_FLAG_DESC[i])
             i += 1
-        print('Access Flags:           ' + (','.join(accessFlagArray)))
-        # thisClassBytes = f.read(2)
-        # print(str(Utils.formatDataByte(thisClassBytes, 'd')))
+        print('Class Access Flags:           ' + (','.join(accessFlagArray)))
+
+        parseClassType('this class', f, constantPools)
+        parseClassType('supper class', f, constantPools)
         # superClassBytes = f.read(2)
         # print(str(Utils.formatDataByte(superClassBytes, 'd')))
+
+
+def parseClassType(classTypeStr, f, constantPools):
+    '''
+    解析this class 和 super class 类型
+    '''
+    thisClassBytes = f.read(2)
+    # 获取的位置跟数组里面的为止要进行 - 1操作
+    indexOfClass = Utils.formatDataByte(thisClassBytes, 'd') - 1
+    try:
+        relatedIndexOfClass = getattr(constantPools[indexOfClass],
+                                      'classIndex')
+    except:
+        print('get exception when get the relatedIndexOfClass')
+    thisClass = constantPools[relatedIndexOfClass]
+    if isinstance(thisClass, Utf8Info):
+        print('{}:              {}'.format(classTypeStr,
+                                           thisClass.getContent()))
 
 
 def parseMethodInfo(order, tag, classIndexBytes, nameAndTypeIndexBytes):
     '''
     方法信息
     '''
-    parseInfo("MethodRef", order, tag, classIndexBytes, nameAndTypeIndexBytes)
+    return parseInfo("MethodRef", order, tag, classIndexBytes,
+                     nameAndTypeIndexBytes)
 
 
 def parseFieldInfo(order, tag, classIndexBytes, nameAndTypeIndexBytes):
     '''
     变量信息
     '''
-    parseInfo("FieldRef", order, tag, classIndexBytes, nameAndTypeIndexBytes)
+    return parseInfo("FieldRef", order, tag, classIndexBytes,
+                     nameAndTypeIndexBytes)
 
 
 def parseStringInfo(order, tag, classIndexBytes):
     '''
     字符串信息
     '''
-    CommonRefInfo1.parseInfo("String", order, tag, classIndexBytes)
+    return CommonRefInfo1.parseInfo("String", order, tag, classIndexBytes)
 
 
 def parseClassInfo(order, tag, classIndexBytes):
     '''
     Class信息
     '''
-    CommonRefInfo1.parseInfo("Class", order, tag, classIndexBytes)
+    return CommonRefInfo1.parseInfo("Class", order, tag, classIndexBytes)
 
 
 def parseInfo(type, order, tag, classIndexBytes, nameAndTypeIndexBytes):
     '''
     方法信息
     '''
-    CommonRefInfo.parseInfo(type, order, tag, classIndexBytes,
-                            nameAndTypeIndexBytes)
+    return CommonRefInfo.parseInfo(type, order, tag, classIndexBytes,
+                                   nameAndTypeIndexBytes)
 
 
 def parseUtf8Info(order, tag, contentBytes):
     '''
     utf-8 信息
     '''
-    Utf8Info.parseInfo("Utf8", order, tag, contentBytes)
+    return Utf8Info.parseInfo("Utf8", order, tag, contentBytes)
 
 
 def parseNameAndType(order, tag, classIndexBytes, nameAndTypeIndexBytes):
     '''
     解析 NameAndType信息
     '''
-    CommonRefInfo2.parseInfo("NameAndType", order, tag, classIndexBytes,
-                             nameAndTypeIndexBytes)
+    return CommonRefInfo2.parseInfo("NameAndType", order, tag, classIndexBytes,
+                                    nameAndTypeIndexBytes)
 
 
 def executeMethod(order, tag, switchers, f):
@@ -182,9 +204,9 @@ def executeMethod(order, tag, switchers, f):
 
     if method:
         if nameAndTypeIndexBytes:
-            method(order, tag, nameIndexBytes, nameAndTypeIndexBytes)
+            return method(order, tag, nameIndexBytes, nameAndTypeIndexBytes)
         else:
-            method(order, tag, nameIndexBytes)
+            return method(order, tag, nameIndexBytes)
 
 
 def parseData(datas, desc, formatter):
