@@ -110,8 +110,17 @@ def readClass():
 
         parseClassType('this class', f, constantPools)
         parseClassType('supper class', f, constantPools)
-        # superClassBytes = f.read(2)
-        # print(str(Utils.formatDataByte(superClassBytes, 'd')))
+
+        print()
+        interfaceCnt = Utils.formatDataByte(f.read(2), 'd')
+        print('interface count:         ' + str(interfaceCnt))
+        for i in range(1, 1 + interfaceCnt):
+            interfaceIndex = Utils.formatDataByte(f.read(2), 'd') - 1
+            finalInterfaceIndex = getattr(constantPools[interfaceIndex],
+                                          'classIndex') - 1
+
+            print('Interface #{}:            {}'.format(
+                i, str(constantPools[finalInterfaceIndex].getContent())))
 
 
 def parseClassType(classTypeStr, f, constantPools):
