@@ -62,8 +62,8 @@ cli.add_command(java)
 cli.add_command(javap)
 
 from ref_info import CommonRefInfo, CommonRefInfo1, CommonRefInfo2, Utf8Info
+from field_info import FieldInfo
 from utils import Utils
-from constants import ACCESS_FLAG, ACCESS_FLAG_DESC
 
 
 def readClass():
@@ -100,13 +100,8 @@ def readClass():
             constantPools.append(constantPool)
         print()
         accessFlagBytes = Utils.formatDataByte(f.read(2), 'd')
-        accessFlagArray = []
-        i = 0
-        while i < len(ACCESS_FLAG):
-            if ACCESS_FLAG[i] & accessFlagBytes > 0:
-                accessFlagArray.append('ACC_' + ACCESS_FLAG_DESC[i])
-            i += 1
-        print('Class Access Flags:           ' + (','.join(accessFlagArray)))
+        accessFlag = Utils.getAccessFlag(accessFlagBytes)
+        print('Class Access Flags:           ' + accessFlag)
 
         parseClassType('this class', f, constantPools)
         parseClassType('supper class', f, constantPools)
@@ -121,6 +116,12 @@ def readClass():
 
             print('Interface #{}:            {}'.format(
                 i, str(constantPools[finalInterfaceIndex].getContent())))
+
+        print()
+        fieldCount = Utils.formatDataByte(f.read(2), 'd')
+        print('field count:             ' + str(fieldCount))
+        for i in range(0, fieldCount):
+            FieldInfo.parseInfo(f)
 
 
 def parseClassType(classTypeStr, f, constantPools):
