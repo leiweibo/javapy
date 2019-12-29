@@ -92,7 +92,6 @@ def readClass():
             'constant pool count(final result should be the shown value - 1)',
             'd')
         constantPoolCount = int(constantPoolCount)
-        print('the constant is --------------------')
         constantPools = []
         for i in range(1, constantPoolCount):
             tag = Utils.formatDataByte(f.read(1), 'd')
@@ -100,7 +99,7 @@ def readClass():
             constantPools.append(constantPool)
         print()
         accessFlagBytes = Utils.formatDataByte(f.read(2), 'd')
-        accessFlag = Utils.getAccessFlag(accessFlagBytes)
+        accessFlag = Utils.getClassAccessFlag(accessFlagBytes)
         print('Class Access Flags:           ' + accessFlag)
 
         parseClassType('this class', f, constantPools)

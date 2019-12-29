@@ -1,4 +1,4 @@
-from constants import ACCESS_FLAG, ACCESS_FLAG_DESC
+from constants import CLASS_ACCESS_FLAG, CLASS_ACCESS_FLAG_DESC, FIELD_ACCESS_FLAG, FIELD_ACCESS_FLAG_DESC
 
 
 class Utils:
@@ -19,12 +19,23 @@ class Utils:
         return result
 
     @staticmethod
-    def getAccessFlag(accessFlagBytes):
+    def getClassAccessFlag(accessFlagBytes):
         i = 0
         accessFlagArray = []
-        while i < len(ACCESS_FLAG):
-            if ACCESS_FLAG[i] & accessFlagBytes > 0:
-                accessFlagArray.append('ACC_' + ACCESS_FLAG_DESC[i])
+        while i < len(CLASS_ACCESS_FLAG):
+            if CLASS_ACCESS_FLAG[i] & accessFlagBytes > 0:
+                accessFlagArray.append('ACC_' + CLASS_ACCESS_FLAG_DESC[i])
+            i += 1
+        accessFlag = (','.join(accessFlagArray))
+        return accessFlag
+
+    @staticmethod
+    def getFieldAccessFlag(accessFlagBytes):
+        i = 0
+        accessFlagArray = []
+        while i < len(FIELD_ACCESS_FLAG):
+            if FIELD_ACCESS_FLAG[i] & accessFlagBytes > 0:
+                accessFlagArray.append('ACC_' + FIELD_ACCESS_FLAG_DESC[i])
             i += 1
         accessFlag = (','.join(accessFlagArray))
         return accessFlag

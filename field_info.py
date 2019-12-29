@@ -1,5 +1,7 @@
 from utils import Utils
 
+from utils import Utils
+
 
 class FieldInfo:
     def __init__(self, accessFlag, nameIndex, descriptorIndex, attributeCount,
@@ -16,14 +18,20 @@ class FieldInfo:
         self.attributes = attributes
 
     def printString(self):
-        print('............')
+        print("Field ---> accessFlag: {}, nameIndex: {}, descriptorIndex: {}, attributes_count:{} ".format(
+            self.accessFlag, self.nameIndex, self.descriptorIndex, self.attributeCount))
+        for att in self.attributes:
+            att.printString()
+        print()
+
 
     @staticmethod
     def parseInfo(f):
         accessFlagBytes = f.read(2)
-        accessFlag = Utils.formatDataByte(accessFlagBytes, 'd')
+        accessFlag = Utils.getFieldAccessFlag(Utils.formatDataByte(accessFlagBytes, 'd'))
         nameIndexBytes = f.read(2)
         nameIndex = Utils.formatDataByte(nameIndexBytes, 'd')
+
         descriptoIndexBytes = f.read(2)
         descriptorIndex = Utils.formatDataByte(descriptoIndexBytes, 'd')
         attrCntBytes = f.read(2)
@@ -57,3 +65,8 @@ class AttributeInfo:
         self.attributeLen = attributeLen
         # u1[len]
         self.infos = infos
+
+    def printString(self):
+        print("attributeNameIndex:{}, attributeLen: {}, info: {}".format(self.attributeNameIndex, self.attributeLen, self.infos))
+    def __str__(self):
+        return self.attributeNameIndex + ", " + self.attributeLen + ", " + self.infos
