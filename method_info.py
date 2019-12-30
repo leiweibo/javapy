@@ -1,18 +1,13 @@
 from utils import Utils
 from attribute_info import AttributeInfo
 
-class FieldInfo:
-    def __init__(self, accessFlag, nameIndex, descriptorIndex, attributeCount,
-                 attributes):
-        # u2
+
+class MethodInfo:
+    def __init__(self, accessFlag, nameIndex, descriptorIndex, attributeCount, attributes):
         self.accessFlag = accessFlag
-        # u2
         self.nameIndex = nameIndex
-        # u2
         self.descriptorIndex = descriptorIndex
-        # u2
         self.attributeCount = attributeCount
-        # Attribute[len]
         self.attributes = attributes
 
     def printString(self):
@@ -21,7 +16,6 @@ class FieldInfo:
         for att in self.attributes:
             att.printString()
         print()
-
 
     @staticmethod
     def parseInfo(f):
@@ -42,20 +36,14 @@ class FieldInfo:
             attributeLen = Utils.formatDataByte(attributeLenBytes, 'd')
 
             infos = []
-            if attributeLen > 0:
-                for j in range(0, attributeLen):
-                    info = f.read(1)
-                    print(info)
-                    infos.append(info)
-
+            for j in range(0, attributeLen):
+                info = Utils.formatDataByte(f.read(1), 'd')
+                infos.append(info)
 
             attribute = AttributeInfo(attributeNameIndex, attributeLen, infos)
             attrs.append(attribute)
 
-        fieldInfo = FieldInfo(accessFlag, nameIndex, descriptorIndex, attrCnt,
-                              attrs)
+        fieldInfo = MethodInfo(accessFlag, nameIndex, descriptorIndex, attrCnt,
+                               attrs)
         fieldInfo.printString()
         return fieldInfo
-
-
-

@@ -63,6 +63,7 @@ cli.add_command(javap)
 
 from ref_info import CommonRefInfo, CommonRefInfo1, CommonRefInfo2, Utf8Info
 from field_info import FieldInfo
+from method_info import MethodInfo
 from utils import Utils
 
 
@@ -121,6 +122,13 @@ def readClass():
         print('field count:             ' + str(fieldCount))
         for i in range(0, fieldCount):
             FieldInfo.parseInfo(f)
+
+        print()
+        methodCount = Utils.formatDataByte(f.read(2), 'd')
+        print(f'method count is : {methodCount}')
+
+        for i in range(0, methodCount):
+            MethodInfo.parseInfo(f)
 
 
 def parseClassType(classTypeStr, f, constantPools):

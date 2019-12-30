@@ -15,7 +15,7 @@ class Utils:
         elif formatter == 'd':
             result = int(result)
         elif formatter == 's':
-            result = datas.decode(encoding='utf8')
+            result = datas.decode(encoding='utf-8')
         return result
 
     @staticmethod
